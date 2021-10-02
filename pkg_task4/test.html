@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Vargi-Bots</title>
+</head>
+<header>
+    <center>
+        <div id="eyantraLogo">
+            <!-- eyantra logo -->
+            <img src="https://eyic.e-yantra.org/img/eYantra_logo_whitetext.png" alt="e_yantra_logo" width="290" height="60"><br>
+        </div>
+    </center>
+</header>
+<body>
+    <center><h2>VB#1363 Dashboard Module 2</h2></center>
+        <hr style="height:4px;border-width:0;color:gray;background-color:gray">
+   	
+   		<center><table id="table1" border='1px'>
+            <tr>
+                <th>Order Id</th>
+                <th>Item</th>
+                <th>Priority</th>
+                <th>City</th>
+                <th>Latitude</th>
+                <th>Longitude</th>
+            </tr>
+            <tbody id="tableContent">
+            </tbody>
+        </table></center>
+
+        <hr style="height:4px;border-width:0;color:gray;background-color:gray">
+
+</body>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+
+<script>
+
+    $(document).ready(function() {
+       
+        refreshTable();
+    
+
+        setInterval(refreshTable, 1000);
+    });
+    
+    function refreshTable(){
+          
+        
+        $.getJSON('https://spreadsheets.google.com/feeds/list/1PT-tfzBXyHnJ5etNbIImwh00_O36Jl_SgEHLZzXWxI0/1/public/full?alt=json', function(data) {
+        	
+            	var trHTML = '';
+
+            	for (var i = 0; i < data.feed.entry.length; ++i) {
+                	var myData_map, myData_order;
+
+                    trHTML += '<tr><td>' + data.feed.entry[i].gsx$orderid.$t + 
+                        	  '</td><td>' + data.feed.entry[i].gsx$item.$t + 
+                        	  '</td><td>' + data.feed.entry[i].gsx$priority.$t + 
+                        	  '</td><td>' + data.feed.entry[i].gsx$city.$t + 
+                        	  '</td><td>'  + data.feed.entry[i].gsx$latitude.$t +
+                              '</td><td>'  + data.feed.entry[i].gsx$longitude.$t + 
+                        	  '</td></tr>';
+
+                }
+
+                console.log(trHTML);
+        		$('#tableContent').html(trHTML);
+        		var trHTML = '';
+
+        	});	 
+    }	
+    
+</script>
+</html>

@@ -1,0 +1,1 @@
+string box_color
