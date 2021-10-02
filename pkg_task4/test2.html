@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Vargi-Bots</title>
+
+    <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.6.0/dist/leaflet.css"
+    integrity="sha512-xwE/Az9zrjBIphAcBb3F6JVqxf46+CDLwfLMHloNu6KEQCAWi6HcDUbeOfBIptF7tcCzusKFjFw2yuvEpDL9wQ=="
+    crossorigin=""
+  	/>
+
+  	<script
+    src="https://unpkg.com/leaflet@1.6.0/dist/leaflet.js"
+    integrity="sha512-gZwIG9x3wUXg2hdXF6+rVkLF/0Vi9U8D2Ntg4Ga5I5BZpVkVxlJWbSQtXPSiUTtC0TjtGOmxa1AJPuV0CPthew=="
+    crossorigin=""
+  	></script>
+</head>
+<header>
+    <center>
+        <div id="eyantraLogo">
+            <!-- eyantra logo -->
+            <img src="https://eyic.e-yantra.org/img/eYantra_logo_whitetext.png" alt="e_yantra_logo" width="290" height="60"><br>
+        </div>
+    </center>
+</header>
+<body>
+    <center><h2>VB#0000 Dashboard Module 3</h2></center>
+
+    <div id="map" style="height: 380px"></div>
+</body>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+<script>
+    /////////////Ajax Requests////////////
+    $(document).ready(function() {
+        // Fetch the initial Map
+        refreshMap();
+    
+        // Fetch every 5 second
+        setInterval(refreshMap, 5000);
+    });
+
+    function refreshMap(){
+        var container = L.DomUtil.get('map');
+
+      	if(container != null){
+        container._leaflet_id = null;
+        }
+         
+        var map = L.map('map').setView([20.5937, 78.9629], 4);
+        var jsonDataObject =[];
+         
+         var LeafIcon = L.Icon.extend({
+             options: {
+                // shadowUrl: 'leaf-shadow.png',
+                iconSize:     [38, 95],
+                shadowSize:   [50, 64],
+                iconAnchor:   [22, 94],
+                shadowAnchor: [4, 62],
+                popupAnchor:  [-3, -76]}});
+        var greenIcon = new LeafIcon({iconUrl: 'leaf-green.png'}),
+            redIcon = new LeafIcon({iconUrl: 'leaf-red.png'}),
+            orangeIcon = new LeafIcon({iconUrl: 'leaf-orange.png'});
+
+ 
+
+        $.getJSON('https://spreadsheets.google.com/feeds/list/1PT-tfzBXyHnJ5etNbIImwh00_O36Jl_SgEHLZzXWxI0/1/public/full?alt=json', function(data) {
+        for (var i = 0; i < data.feed.entry.length; ++i) {
+
+            var json_data = {
+                "City": data.feed.entry[i].gsx$city.$t,
+                "OderID" : data.feed.entry[i].gsx$orderid.$t,
+                "Item" : data.feed.entry[i].gsx$item.$t,
+                "Latitude": parseFloat(data.feed.entry[i].gsx$latitude.$t),
+                "Longitude": parseFloat(data.feed.entry[i].gsx$longitude.$t),
+                "Priority": data.feed.entry[i].gsx$priority.$t
+            };
+            jsonDataObject.push(json_data);
+                
+            for (var j = 0; j < jsonDataObject.length; j++) {
+                if(jsonDataObject[j].Priority == 'HP'){
+          var marker = L.marker(L.latLng(parseFloat(jsonDataObject[j].Latitude), parseFloat(jsonDataObject[j].Longitude)),{icon: redIcon});
+          }
+        else if(jsonDataObject[j].Priority == 'MP'){
+          var marker = L.marker(L.latLng(parseFloat(jsonDataObject[j].Latitude), parseFloat(jsonDataObject[j].Longitude)), {icon: orangeIcon});
+          }
+        else if(jsonDataObject[j].Priority == 'LP'){
+         var marker = L.marker(L.latLng(parseFloat(jsonDataObject[j].Latitude), parseFloat(jsonDataObject[j].Longitude)), {icon: greenIcon});
+          }
+                marker.bindPopup(jsonDataObject[j].City, {
+                        autoClose: false
+                });
+                map.addLayer(marker);
+                marker.on('click', onClick_Marker)
+                // Attach the corresponding JSON data to your marker:
+                marker.myJsonData =jsonDataObject[j];
+        
+                function onClick_Marker(e) {
+                        var marker = e.target;
+                        popup = L.popup()
+                        .setLatLng(marker.getLatLng())
+                        .setContent("Order ID: " + marker.myJsonData.OderID + " || Item: " +   marker.myJsonData.Item)
+                        .openOn(map);
+                    }
+
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                        attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
+                }).addTo(map); 
+                    
+
+                }
+            }
+        });
+    }
+
+</script>
+</html>
+

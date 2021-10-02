@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Vargi-Bots</title>
+
+    <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.6.0/dist/leaflet.css"
+    integrity="sha512-xwE/Az9zrjBIphAcBb3F6JVqxf46+CDLwfLMHloNu6KEQCAWi6HcDUbeOfBIptF7tcCzusKFjFw2yuvEpDL9wQ=="
+    crossorigin=""
+  	/>
+
+  	<script
+    src="https://unpkg.com/leaflet@1.6.0/dist/leaflet.js"
+    integrity="sha512-gZwIG9x3wUXg2hdXF6+rVkLF/0Vi9U8D2Ntg4Ga5I5BZpVkVxlJWbSQtXPSiUTtC0TjtGOmxa1AJPuV0CPthew=="
+    crossorigin=""
+  	></script>
+      <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+  <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+</head>
+<header>
+    <center>
+        <div id="eyantraLogo">
+            <!-- eyantra logo -->
+            <img src="https://eyic.e-yantra.org/img/eYantra_logo_whitetext.png" alt="e_yantra_logo" width="290" height="60"><br>
+        </div>
+    </center>
+</header>
+<body>
+    <center><h2>VB#0000 Dashboard Module 3</h2></center>
+
+    <div id="map" style="height: 380px"></div>
+      <div id="column_chart" style="width: 100%; height: 400px;"></div>
+    
+    <hr style="height:4px;border-width:0;color:gray;background-color:gray">
+    
+        <center><table id="table1" border='1px'>
+            <tr>
+                <th>Order Id</th>
+                <th>Item</th>
+                <th>Priority</th>
+                <th>City</th>
+                <th>Latitude</th>
+                <th>Longitude</th>
+            </tr>
+            <tbody id="tableContent">
+            </tbody>
+        </table></center>
+
+        <hr style="height:4px;border-width:0;color:gray;background-color:gray">
+
+
+
+</body>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+<script>
+    /////////////Ajax Requests////////////
+    $(document).ready(function() {
+        // Fetch the initial Map
+        refreshMap();
+    
+        // Fetch every 5 second
+        setInterval(refreshMap, 5000);
+    });
+
+    function refreshMap(){
+        var container = L.DomUtil.get('map');
+
+      	if(container != null){
+        container._leaflet_id = null;
+        }
+         
+        var map = L.map('map').setView([20.5937, 78.9629], 4);
+        var jsonDataObject =[];
+        var LeafIcon = L.Icon.extend({
+    options: {
+        shadowUrl: 'leaf-shadow.png',
+        iconSize:     [38, 95],
+        shadowSize:   [50, 64],
+        iconAnchor:   [22, 94],
+        shadowAnchor: [4, 62],
+        popupAnchor:  [-3, -76]
+    }
+});
+        var greenIcon = new LeafIcon({iconUrl: 'leaf-green.png'}),
+    redIcon = new LeafIcon({iconUrl: 'leaf-red.png'}),
+    orangeIcon = new LeafIcon({iconUrl: 'leaf-orange.png'});
+
+        $.getJSON('https://spreadsheets.google.com/feeds/list/1PT-tfzBXyHnJ5etNbIImwh00_O36Jl_SgEHLZzXWxI0/1/public/full?alt=json', function(data) {
+        for (var i = 0; i < data.feed.entry.length; ++i) {
+
+            var json_data = {
+                "City": data.feed.entry[i].gsx$city.$t,
+                "OderID" : data.feed.entry[i].gsx$orderid.$t,
+                "Item" : data.feed.entry[i].gsx$item.$t,
+                "Latitude": parseFloat(data.feed.entry[i].gsx$latitude.$t),
+                "Longitude": parseFloat(data.feed.entry[i].gsx$longitude.$t),
+                "Priority": data.feed.entry[i].gsx$priority.$t
+            };
+            jsonDataObject.push(json_data);
+                
+            for (var j = 0; j < jsonDataObject.length; j++) {
+                if(jsonDataObject[j].Priority == 'HP'){
+          var marker = L.marker(L.latLng(parseFloat(jsonDataObject[j].Latitude), parseFloat(jsonDataObject[j].Longitude)),{icon: redIcon});
+          }
+        else if(jsonDataObject[j].Priority == 'MP'){
+          var marker = L.marker(L.latLng(parseFloat(jsonDataObject[j].Latitude), parseFloat(jsonDataObject[j].Longitude)), {icon: orangeIcon});
+          }
+        else if(jsonDataObject[j].Priority == 'LP'){
+         var marker = L.marker(L.latLng(parseFloat(jsonDataObject[j].Latitude), parseFloat(jsonDataObject[j].Longitude)), {icon: greenIcon});
+          }
+                // var marker = L.marker(L.latLng(parseFloat(jsonDataObject[j].Latitude), parseFloat(jsonDataObject[j].Longitude)));
+                marker.bindPopup(jsonDataObject[j].City, {
+                        autoClose: false
+                });
+                map.addLayer(marker);
+                marker.on('click', onClick_Marker)
+                // Attach the corresponding JSON data to your marker:
+                marker.myJsonData =jsonDataObject[j];
+        
+                function onClick_Marker(e) {
+                        var marker = e.target;
+                        popup = L.popup()
+                        .setLatLng(marker.getLatLng())
+                        .setContent("Order ID: " + marker.myJsonData.OderID + " || Item: " +   marker.myJsonData.Item)
+                        .openOn(map);
+                    }
+
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                        attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
+                }).addTo(map); 
+                    
+
+                }
+            }
+        });
+    }
+
+</script>
+<script type="text/javascript">
+  $(document).ready(function() {
+    // Fetch the initial Chart
+    refreshChart();
+    // Fetch every 5 second
+    setInterval(refreshChart, 5000);
+  });
+  google.charts.load("current", {packages:['corechart']});
+  google.charts.setOnLoadCallback(refreshChart);
+
+  function refreshChart(){
+    var jsonDataObject =[];
+    var graph_arr = [['Order ID', 'Time Taken', { role: 'style' }]];
+    var bar_color = [];
+    $.getJSON('https://spreadsheets.google.com/feeds/list/1PT-tfzBXyHnJ5etNbIImwh00_O36Jl_SgEHLZzXWxI0/1/public/full?alt=json', function(data) {
+      for (var i = 0; i < data.feed.entry.length; ++i) {
+        var json_data = {
+          "OderID" : data.feed.entry[i].gsx$orderid.$t,
+          "TimeTaken": parseFloat(data.feed.entry[i].gsx$timetaken.$t),
+          "Priority": data.feed.entry[i].gsx$priority.$t
+          };
+          jsonDataObject.push(json_data);
+      };
+      // Setting color for the coloumns of graph according to priority of items
+      for(var j in jsonDataObject){
+        if(jsonDataObject[j].Priority == 'HP'){
+          var color =  '#FF0000';
+          }
+        else if(jsonDataObject[j].Priority == 'MP'){
+          var color =  '#FFFF00';
+          }
+        else if(jsonDataObject[j].Priority == 'LP'){
+          var color =  '#00FF00';
+          }
+        bar_color.push(color)
+      }
+
+      // Converting Json Object to JavaScript Array
+      for(var j in jsonDataObject){
+          graph_arr.push([jsonDataObject[j].OderID,jsonDataObject[j].TimeTaken, bar_color[j]]);
+      }
+      var graphArray_Final = google.visualization.arrayToDataTable(graph_arr);
+    
+      var data = new google.visualization.DataView(graphArray_Final); 
+
+      var options = {
+        title: 'Time Taken for items to be Shipped',
+        hAxis: { title: 'Order ID'},
+        vAxis: { title: 'Time Taken (s)'},
+        legend: { position: "none" },
+      };
+      var chart = new google.visualization.ColumnChart(document.getElementById('column_chart'));
+      chart.draw(data, options);
+    });  
+  }
+</script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+
+<script>
+
+    $(document).ready(function() {
+       
+        refreshTable();
+    
+
+        setInterval(refreshTable, 1000);
+    });
+    
+    function refreshTable(){
+          
+        
+        $.getJSON('https://spreadsheets.google.com/feeds/list/1PT-tfzBXyHnJ5etNbIImwh00_O36Jl_SgEHLZzXWxI0/1/public/full?alt=json', function(data) {
+            
+                var trHTML = '';
+
+                for (var i = 0; i < data.feed.entry.length; ++i) {
+                    var myData_map, myData_order;
+
+                    trHTML += '<tr><td>' + data.feed.entry[i].gsx$orderid.$t + 
+                              '</td><td>' + data.feed.entry[i].gsx$item.$t + 
+                              '</td><td>' + data.feed.entry[i].gsx$priority.$t + 
+                              '</td><td>' + data.feed.entry[i].gsx$city.$t + 
+                              '</td><td>'  + data.feed.entry[i].gsx$latitude.$t +
+                              '</td><td>'  + data.feed.entry[i].gsx$longitude.$t + 
+                              '</td></tr>';
+
+                }
+
+                console.log(trHTML);
+                $('#tableContent').html(trHTML);
+                var trHTML = '';
+
+            });  
+    }   
+    
+</script>
+</html>
+
